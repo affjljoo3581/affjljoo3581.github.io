@@ -163,6 +163,16 @@
   .lede p{ margin: 0 0 .85em }
   .lede p:last-child{ margin: 0 }
   .lede strong{ font-weight: 500 }
+  .lede p:first-child::first-letter{
+    font-family: var(--serif);
+    font-weight: 500;
+    color: var(--accent);
+    float: left;
+    font-size: 3.6em;
+    line-height: .85;
+    margin: 0.05em .12em -0.1em 0;
+    font-variation-settings: "opsz" 60;
+  }
 
   /* ─── inline stat-line ─────────────────────────────────────────── */
   .stat-line{
@@ -308,6 +318,14 @@
   /* GitHub-stars placeholder, before fetch resolves */
   .gh-stars{ transition: opacity .2s }
   .gh-stars:not(.loaded){ opacity: .4 }
+  .hl{
+    background: var(--accent);
+    color: var(--bg);
+    padding: .1em .2em;
+    border-radius: 0px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
   .dag{
     color: var(--accent);
     font-size: 0.7em;
@@ -809,6 +827,8 @@ colophon: "Set in Newsreader & IBM Plex Mono · Hand-tended in Seoul"
       .replace(/\{eq\}/g, '<span class="eq" style="color:var(--accent)">*</span>')
       // {dagger}            → equal-contribution asterisk
       .replace(/\{dag\}/g, '<span class="dag">†</span>')
+      // {hl:text} → accent-block highlight (use sparingly)
+      .replace(/\{hl:([^}]+)\}/g, '<span class="hl">$1</span>')
       // {sup:th}        → superscript suffix
       .replace(/\{sup:([^}]+)\}/g, '<sup>$1</sup>')
       // author elision  →  ", ...," (or ", ...") becomes ", …,"
