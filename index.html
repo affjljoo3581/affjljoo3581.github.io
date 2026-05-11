@@ -1,0 +1,1207 @@
+<!doctype html>
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PERSONAL PROFILE SITE — single-file build.
+
+  TO UPDATE CONTENT: scroll to the <script id="site-data" type="text/yaml">
+  block (just inside <body>, around line 425) and edit the YAML.
+  Nothing else in this file needs to change for routine updates.
+
+  STRUCTURE OF THIS FILE:
+    1. <head>          — meta, fonts, ALL the CSS (design lives here)
+    2. <body>
+       a. <script id="site-data">  ← YOUR CONTENT (edit this)
+       b. <main id="app">          ← rendered into by the script below
+       c. js-yaml + marked from CDN
+       d. inline renderer          ← reads (a), writes (b)
+
+  See README.md for token syntax ({me:Name}, {eq}, {sup:th}, ", ...").
+  ════════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Loading…</title>
+<meta name="description" content="" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ─── tokens ─────────────────────────────────────────────────────── */
+  :root{
+    --serif: "Newsreader", "Iowan Old Style", "Charter", Georgia, serif;
+    --mono:  "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --bg:        #efeae0;
+    --bg-tint:   #e7e1d3;
+    --rule:      rgba(22,26,31,.18);
+    --rule-soft: rgba(22,26,31,.08);
+    --ink:       #161a1f;
+    --ink-soft:  #3d4248;
+    --ink-mute:  #6e6f6c;
+    --ink-faint: #6e6f6c40;
+    --accent:    #1f5853;
+    --accent-tint:#1f58530f;
+
+    --measure: 760px;
+    --pad: clamp(20px, 4vw, 40px);
+    --t-body: 18px;
+  }
+  :root[data-theme="paper"]{
+    --bg:#fbf9f3; --bg-tint:#f1ede1; --ink:#10131a; --ink-soft:#33373d; --ink-mute:#71726f; --rule:rgba(16,19,26,.16);
+  }
+  :root[data-theme="dusk"]{
+    --bg:#15171a; --bg-tint:#1d2024; --ink:#e6e2d3; --ink-soft:#a8a59a; --ink-mute:#7e7d75; --ink-faint:#7e7d7530;
+    --rule:rgba(230,226,211,.14); --rule-soft:rgba(230,226,211,.07);
+    --accent:#7fc7b9; --accent-tint:#7fc7b914;
+  }
+
+  /* ─── reset ─────────────────────────────────────────────────────── */
+  *,*::before,*::after{ box-sizing:border-box }
+  html,body{ margin:0; padding:0; overflow-x:hidden }
+  html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:var(--t-body);
+    line-height:1.55;
+    font-feature-settings:"kern","liga","onum","ss01";
+    transition: background .25s, color .25s;
+  }
+  ::selection{ background:var(--accent); color:var(--bg) }
+  a{ color:inherit; text-decoration:none; border-bottom:1px solid var(--ink-faint); transition:color .15s, border-color .15s }
+  a:hover{ color:var(--accent); border-bottom-color:var(--accent) }
+  p{ margin:0 0 1em } em{ font-style:italic } strong{ font-weight:600 }
+
+  .mono{ font-family: var(--mono); font-size: 12.5px; letter-spacing: 0; }
+
+  /* ─── layout ────────────────────────────────────────────────────── */
+  .page{
+    max-width: calc(var(--measure) + var(--pad)*2);
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 56px) var(--pad) 96px;
+  }
+
+  /* ─── masthead ─────────────────────────────────────────────────── */
+  .masthead{
+    text-align: center;
+    border-top: 4px double var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 28px 0 22px;
+    position: relative;
+  }
+  .masthead .edition{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display:flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin: 0 0 18px;
+  }
+  .masthead .edition .l, .masthead .edition .r{ flex: 0 0 auto; white-space: nowrap }
+  .masthead .edition .c{ flex: 1; text-align: center; white-space: nowrap }
+  .name{
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(46px, 9vw, 88px);
+    letter-spacing: -.02em;
+    line-height: .95;
+    margin: 0;
+    font-style: normal;
+    font-variation-settings: "opsz" 60;
+    overflow-wrap: break-word;
+  }
+  .name .han{
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-soft);
+    font-size: .42em;
+    margin-left: .2em;
+    vertical-align: .25em;
+    font-variation-settings: "opsz" 30;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .masthead .strap{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 16px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .masthead .strap::before, .masthead .strap::after{
+    content: "";
+    flex: 1;
+    max-width: 80px;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* ─── lede / opening paragraph ─────────────────────────────────── */
+  .lede{
+    margin: 36px auto 0;
+    max-width: 60ch;
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink);
+    text-wrap: pretty;
+    text-align: left;
+  }
+  .lede p{ margin: 0 0 .85em }
+  .lede p:last-child{ margin: 0 }
+  .lede strong{ font-weight: 500 }
+
+  /* ─── inline stat-line ─────────────────────────────────────────── */
+  .stat-line{
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 22px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 0;
+  }
+  .stat-line .s b{ font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px }
+  .stat-line .s sup{ vertical-align: 5px; font-size: 8px; }
+  .stat-line .div{ color: var(--ink-faint) }
+
+  /* ─── contact strip ────────────────────────────────────────────── */
+  .contact{
+    margin: 22px 0 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: .04em;
+    line-height: 1.9;
+  }
+  .contact .ci{ white-space: nowrap }
+  .contact a{ color: var(--ink-soft); border-bottom-color: transparent; padding: 0 4px }
+  .contact a:hover{ color: var(--accent); border-bottom-color: var(--accent) }
+  .contact .sep{ color: var(--ink-faint); margin: 0 2px }
+  @media (max-width: 580px){
+    .contact{ font-size: 11.5px; letter-spacing: .02em }
+    .contact a{ padding: 0 2px }
+  }
+
+  /* ─── section divider ──────────────────────────────────────────── */
+  section{ margin-top: 64px }
+  .sec-head{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 28px;
+  }
+  .sec-head::before, .sec-head::after{
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-image: linear-gradient(to right, var(--rule) 50%, transparent 50%);
+    background-size: 4px 1px;
+    background-repeat: repeat-x;
+  }
+  .sec-head h2{
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0;
+    flex: 0 0 auto;
+  }
+  .sec-head h2 .glyph{ color: var(--accent); margin-right: 6px; font-family: var(--serif); font-style: italic; font-size: 13px; vertical-align: -1px }
+
+  /* ─── two-column data rows (the workhorse) ───────────────────── */
+  .row{
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    align-items: baseline;
+  }
+  .row:last-child{ border-bottom: 0 }
+  .row > .meta{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-variant-numeric: tabular-nums;
+    padding-top: 3px;
+  }
+  .row > .meta .v{ display:block; color: var(--ink-soft) }
+  .row > .body .title{
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 1.4;
+    margin: 0 0 4px;
+    letter-spacing: -.005em;
+    text-wrap: pretty;
+  }
+  .row > .body .title a{ border-bottom-color: transparent }
+  .row > .body .authors{
+    font-family: var(--serif);
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 4px;
+    text-wrap: pretty;
+  }
+  .row > .body .authors .me{
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .row > .body .authors .eq{ color: var(--accent); font-weight: 500 }
+  .row > .body .links{
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .row > .body .links a{ color: var(--ink-soft); border-bottom: 1px solid var(--ink-faint); padding: 0 2px; margin-right: 12px }
+  .row > .body .links a:hover{ color: var(--accent); border-bottom-color: var(--accent) }
+  .row > .body .det{ color: var(--ink-soft); font-style: italic; font-size: 15.5px }
+  .row.simple{ display:grid; grid-template-columns: 80px 1fr auto; gap: 20px; }
+  .row.simple.block > .body .det{
+    display: block;
+    margin-top: 3px;
+  }
+  .row.simple > .where{
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding-top: 3px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .row.simple sup{ font-family: var(--mono); font-size: 8px; vertical-align: 5px; }
+  /* GitHub-stars placeholder, before fetch resolves */
+  .gh-stars{ transition: opacity .2s }
+  .gh-stars:not(.loaded){ opacity: .4 }
+  .dag{
+    color: var(--accent);
+    font-size: 0.7em;
+    line-height: 0;
+    vertical-align: super;
+    margin-left: 0.5px;
+    font-weight: 500 ;
+  }
+  @media (max-width: 580px){
+    .masthead .edition{ justify-content: center; text-align: center }
+    .masthead .edition .l, .masthead .edition .c, .masthead .edition .r{
+      flex: 0 0 auto;
+    }
+    .name{ font-size: clamp(40px, 11vw, 64px) }
+    .name .han{
+      display: block;
+      margin: 6px 0 0;
+      vertical-align: 0;
+      font-size: .35em;
+    }
+  }
+  @media (max-width: 580px){
+    .row, .row.simple{ grid-template-columns: 1fr; gap: 4px }
+    .row > .meta{ padding-top: 0 }
+    /* year / venue → inline on mobile */
+    .row > .meta .v{ display: inline; margin-left: 8px; padding-left: 8px; border-left: 1px solid var(--rule); }
+    .row.simple > .meta .v{ display: inline; margin-left: 8px; padding-left: 8px; border-left: 1px solid var(--rule); }
+    .row.simple > .where{ text-align: left }
+  }
+
+  /* ─── pull / featured ─────────────────────────────────────────── */
+  .pull{
+    margin: 0 0 26px;
+    padding: 4px 0 4px 28px;
+    border-left: 3px solid var(--accent);
+    position: relative;
+  }
+  .pull .kicker{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+  .pull .quote{
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 23px;
+    line-height: 1.35;
+    color: var(--ink);
+    letter-spacing: -.005em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+    font-variation-settings: "opsz" 36;
+  }
+  .pull .quote a{ font-style: italic; border-bottom-color: var(--ink-faint) }
+  .pull .attr{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .pull .attr .me{ color: var(--ink); font-weight: 500 }
+  .pull .attr .links{ margin-top: 8px; display: block }
+  .pull .attr .links a{
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--ink-faint);
+    padding: 0 2px;
+    margin-right: 12px;
+  }
+
+  /* ─── interest pills ────────────────────────────────────────── */
+  .ints{
+    display: flex; flex-wrap: wrap; gap: 6px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  .ints .pill{
+    padding: 3px 10px 4px;
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+  }
+  .ints .pill .glyph{ color: var(--accent); margin-right: 6px }
+
+  /* ─── service venue list ────────────────────────── */
+  .svc{ display:grid; grid-template-columns: 80px 1fr; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--rule-soft) }
+  .svc .yr{
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: .12em;
+    padding-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .svc .vens{ display:flex; flex-wrap: wrap; gap: 6px 0 }
+  .svc .vens .v{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding: 1px 12px;
+    border-right: 1px solid var(--rule);
+  }
+  .svc .vens .v:last-child{ border-right: 0 }
+  @media (max-width: 580px){ .svc{ grid-template-columns: 1fr } }
+
+  /* ─── footer ──────────────────────────────────────────────────── */
+  footer{
+    margin-top: 96px;
+    padding-top: 26px;
+    border-top: 4px double var(--ink);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer a{ color: var(--ink-mute); border-bottom-color: transparent }
+  footer a:hover{ color: var(--accent) }
+  footer .glyph{ color: var(--accent) }
+
+  /* ─── colophon ─────────────────────────────────────── */
+  .colophon{
+    text-align: center;
+    margin: 56px 0 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .colophon::before{
+    content: "❦";
+    display: block;
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 0;
+    text-transform: none;
+    margin: 0 0 14px;
+    font-style: italic;
+  }
+
+  /* ─── loading / error overlay (renderer states) ──────────────── */
+  #render-error{
+    max-width: 60ch; margin: 80px auto; padding: 24px 28px;
+    border: 1px solid var(--rule); background: var(--bg-tint);
+    font-family: var(--mono); font-size: 13px; color: var(--ink);
+    line-height: 1.6;
+  }
+  #render-error h3{ margin: 0 0 10px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent) }
+  #render-error code{ background: var(--rule-soft); padding: 1px 5px; border-radius: 2px }
+  .skeleton{ opacity: 0; transition: opacity .25s }
+  .skeleton.ready{ opacity: 1 }
+</style>
+</head>
+
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  ▼▼▼  EDIT YOUR CONTENT BELOW  ▼▼▼                              ║
+     ║  Anything between the <script> tags is YAML, not JavaScript.    ║
+     ║  The browser does not execute this block (type="text/yaml").    ║
+     ║  Caveat: the literal string </script> is forbidden inside YAML  ║
+     ║  values — write it as <\/script> if you ever need it.           ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<script id="site-data" type="text/yaml">
+# ════════════════════════════════════════════════════════════════════
+#   PERSONAL PROFILE — content file
+#   Edit this file to update the site. No HTML/CSS changes needed.
+#
+#   Markdown is supported in any field marked with “(markdown)”.
+#   Inline emphasis (**bold**, *italic*) and links ([text](url)) work
+#   inside any string value.
+# ════════════════════════════════════════════════════════════════════
+
+# ─── BROWSER TAB / SEO ─────────────────────────────────────────────
+meta:
+  title: Jungwoo Park
+  description: >-
+    Jungwoo Park — PhD student at Korea University, working on language
+    models, pre-training, and mechanistic interpretability.
+  last_revised: May 2026          # shown in the footer
+
+# ─── MASTHEAD (top banner) ─────────────────────────────────────────
+masthead:
+  edition_left:   "Vol. I · No. III"
+  edition_center: "Personal Profile · Est. MMXXIV"
+  edition_right:  "Seoul · KR"
+  name:           "Jungwoo Park"
+  strap:          "Korea University · DMIS Lab · Ph.D. Candidate"
+
+# ─── LEDE (opening paragraphs — markdown allowed) ──────────────────
+lede:
+  paragraphs:
+    - >-
+      I am a Ph.D. candidate in Computer Science & Engineering at
+      Korea University, advised by **Prof. Jaewoo Kang** in the DMIS
+      Lab. My research is on **large language models** — pre-training
+      at scale, post-training stability, and mechanistic interpretability
+      of the resulting models.
+    - >-
+      I’m drawn to problems where careful engineering meets
+      understanding: building models that are cheaper to train and
+      easier to take apart once they exist. Before my Ph.D. I spent
+      four years competing on Kaggle, where I earned **two solo gold
+      medals** alongside nine silvers.
+  interests:
+    - Pre-training
+    - Mechanistic interpretability
+    - Quantization & efficiency
+
+# ─── STAT LINE (the inline numeric strip) ──────────────────────────
+# Use {sup} for superscript suffixes, e.g. "54{sup:th}".
+stats:
+  - { value: "11", label: "papers" }
+  - { value: "4",  label: "first-author" }
+  - { value: "2",  label: "solo Kaggle golds" }
+  - { value: "54{sup:th}", label: "Kaggle peak" }
+
+# ─── CONTACT STRIP ─────────────────────────────────────────────────
+# email is rendered as a mailto: link. Order in this list is the
+# order shown on the page.
+contact:
+  email: jungwoo.park@korea.ac.kr   # ← put your real email here
+  links:
+    - { label: "Scholar",  url: "https://scholar.google.com/citations?user=J8ShYjYAAAAJ" }
+    - { label: "SemSch",   url: "https://www.semanticscholar.org/author/Jungwoo-Park/2326546675" }
+    - { label: "GitHub",   url: "https://github.com/affjljoo3581" }
+    - { label: "Kaggle",   url: "https://www.kaggle.com/affjljoo3581" }
+    - { label: "LinkedIn", url: "https://www.linkedin.com/in/jungwoo-park-488713252/" }
+    - { label: "X",        url: "https://x.com/affjljoo3581" }
+    - { label: "CV ↓",     url: "https://github.com/affjljoo3581/affjljoo3581/blob/main/Jungwoo%20Park%20CV.pdf" }
+
+# ─── NEWS / DISPATCHES ─────────────────────────────────────────────
+# `body` accepts markdown. `where` is the small right-aligned tag.
+news:
+  - date: "Nov 2025"
+    body: "**ASGuard** accepted to *ICLR 2026*."
+    where: "Rio de Janeiro, BR"
+  - date: "Nov 2025"
+    body: "**Curious Case of Analogies** accepted to *AAAI 2026*."
+    where: "Singapore"
+  - date: "Aug 2025"
+    body: "**Med-PRM** accepted to *EMNLP 2025*."
+    where: "Suzhou, CN"
+  - date: "May 2025"
+    body: "**Outlier-Safe Pre-Training** accepted to *ACL 2025*."
+    where: "Vienna, AT"
+  - date: "Jan 2025"
+    body: "**Monet** & **ChroKnowledge** both accepted to *ICLR 2025*."
+    where: "Singapore"
+  - date: "Sep 2024"
+    body: "Started Ph.D. at Korea University DMIS Lab under **Prof. Jaewoo Kang**."
+    where: "Seoul, KR"
+
+# ─── PUBLICATIONS ──────────────────────────────────────────────────
+# Author convention:
+#   • wrap your own name with {me:Jungwoo Park}
+#   • use {eq} after a name to add the equal-contribution asterisk
+#   • use ", ..." for elided author lists (rendered as ", …,")
+#
+# `featured: true` promotes one entry to the pull-quote slot at the
+# top of the section. Only the first featured entry is used.
+#
+# `links` keys: paper / code / slides / bib (any subset, in order).
+publications:
+
+  - year: 2025
+    venue: ICLR
+    title: "Monet: Mixture of Monosemantic Experts for Transformers"
+    authors: "{me:Jungwoo Park}{eq}, Young Jin Ahn{eq}, Kee-Eung Kim, Jaewoo Kang"
+    featured: true
+    featured_blurb: >-
+      An MoE where each expert learns one human-readable concept,
+      recovering monosemanticity at scale without sacrificing
+      perplexity.
+    featured_kicker: "ICLR 2025 · Selected work"
+    links:
+      paper:  "https://openreview.net/forum?id=1Ogw1SHY3p"
+      code:   "https://github.com/dmis-lab/Monet"
+      huggingface: "https://huggingface.co/MonetLLM"
+
+  - year: 2025
+    venue: ACL
+    title: "Outlier-Safe Pre-Training for Robust 4-Bit Quantization of Large Language Models"
+    authors: "{me:Jungwoo Park}, Taewhoo Lee, Chanwoong Yoon, Hyeon Hwang, Jaewoo Kang"
+    featured: true
+    featured_blurb: >-
+      Eliminating the origin of outlier channels which harm robust low-bit quantization
+      and releasing a quantization-friendly foundation model.
+    featured_kicker: "ACL 2025 · Selected work"
+    links:
+      paper: "https://aclanthology.org/2025.acl-long.618/"
+      code:  "https://github.com/dmis-lab/Outlier-Safe-Pre-Training"
+      huggingface: "https://huggingface.co/collections/dmis-lab/outlier-safe-pre-training-osp"
+
+  - year: 2026
+    venue: ICLR
+    title: "ASGuard: Activation-Scaling Guard to Mitigate Targeted Jailbreaking Attack"
+    authors: "Yein Park, {me:Jungwoo Park}, Jaewoo Kang"
+    links: { paper: "https://openreview.net/forum?id=wmiEXNEXPs", code: "https://github.com/dmis-lab/ASGuard"}
+
+  - year: 2026
+    venue: AAAI
+    title: "The Curious Case of Analogies: Investigating Analogical Reasoning in Large Language Models"
+    authors: "Taewhoo Lee, Minju Song, Chanwoong Yoon, {me:Jungwoo Park}, Jaewoo Kang"
+    links: { paper: "https://ojs.aaai.org/index.php/AAAI/article/view/40414", code: "https://github.com/dmis-lab/analogical-reasoning" }
+
+  - year: 2025
+    venue: EMNLP
+    title: "Med-PRM: Medical Reasoning Models with Stepwise, Guideline-verified Process Rewards"
+    authors: "Jaehoon Yun{eq}, Jiwoong Sohn{eq}, {me:Jungwoo Park}{eq}, Hyunjae Kim, ..., Jaewoo Kang"
+    links: { paper: "https://aclanthology.org/2025.emnlp-main.837/", code: "https://github.com/eth-medical-ai-lab/Med-PRM" }
+
+  - year: 2025
+    venue: ACL
+    title: "Does Time Have Its Place? Temporal Heads: Where Language Models Recall Time-specific Information"
+    authors: "Yein Park, Chanwoong Yoon, {me:Jungwoo Park}, Minbyul Jeong, Jaewoo Kang"
+    links: { paper: "https://aclanthology.org/2025.acl-long.812/", code: "https://github.com/dmis-lab/TemporalHead" }
+
+  - year: 2025
+    venue: ICLR
+    title: "ChroKnowledge: Unveiling Chronological Knowledge of Language Models in Multiple Domains"
+    authors: "Yein Park, Chanwoong Yoon, {me:Jungwoo Park}, Donghyeon Lee, Minbyul Jeong, Jaewoo Kang"
+    links: { paper: "https://openreview.net/forum?id=whaO3482bs", code: "https://github.com/dmis-lab/ChroKnowledge" }
+
+  - year: 2025
+    venue: "npj Dig. Med."
+    title: "Small language models learn enhanced reasoning skills from medical textbooks"
+    authors: "Hyunjae Kim, Hyeon Hwang, ..., {me:Jungwoo Park}, ..., Jaewoo Kang"
+    links: { paper: "https://www.nature.com/articles/s41746-025-01653-8", "huggingface": "https://huggingface.co/collections/dmis-lab/meerkat" }
+
+  - year: 2025
+    venue: arXiv
+    title: "LEME: Open Large Language Models for Ophthalmology with Advanced Reasoning and Clinical Validation"
+    authors: "Hyunjae Kim, ..., {me:Jungwoo Park}, ..., Qingyu Chen"
+    links: { paper: "https://arxiv.org/abs/2410.03740" }
+
+  - year: 2025
+    venue: CLEF
+    title: "Prompting Matters: Snippet-Aware Strategies for Biomedical QA with LLMs in BioASQ 13b"
+    authors: "Hajung Kim, Hoonick Lee, Yewon Cho, {me:Jungwoo Park}, ..., Jaewoo Kang"
+    links: { paper: "https://ceur-ws.org/Vol-4038/paper_25.pdf" }
+
+  - year: 2024
+    venue: Interspeech
+    title: "SyncVSR: Data-Efficient Visual Speech Recognition with End-to-End Crossmodal Audio Token Synchronization"
+    authors: "Youngjin Ahn{eq}, {me:Jungwoo Park}{eq}, Sangha Park, Jonghyun Choi, Kee-Eung Kim"
+    links: { paper: "https://www.isca-archive.org/interspeech_2024/ahn24_interspeech.pdf", code: "https://github.com/KAIST-AILab/SyncVSR" }
+
+# ─── ACADEMIC SERVICE ──────────────────────────────────────────────
+service:
+  - { year: 2026, venues: ["NeurIPS", "ARR Jan{dag}"] }
+  - { year: 2025, venues: ["ICLR", "ICCV{dag}", "ARR Jan{dag}"] }
+service_note:
+  - "Reviewer / program committee for the venues above."
+  - "{dag} Served as a secondary reviewer."
+
+# ─── COMPETITIONS ──────────────────────────────────────────────────
+# `body` and `det` (detail) accept markdown.
+competitions:
+  - date: "Aug 2023"
+    tag:  "Gold ◆"
+    body: "Google — American Sign Language Fingerspelling Recognition"
+    det:  "Solo · 5 / 1,315 · monetary prize"
+    where: "Kaggle"
+  - date: "Mar 2022"
+    tag:  "Gold ◆"
+    body: "Feedback Prize — Evaluating Student Writing"
+    det:  "Solo · 4 / 2,058 · monetary prize"
+    where: "Kaggle"
+  - date: "2021–26"
+    tag:  "Silver ×9"
+    body: "Nine silver medals"
+    det:  "G2Net Gravitational Waves · Curriculum Recommendations · Benetech · Google AI4Code · Feedback Prize 2022 · CommonLit · BMS Molecular Translation · Riiid AnswerEx · CSIRO"
+    where: "Kaggle"
+  - date: "2018–19"
+    tag:  "Bronze ×2"
+    body: "Bronze medals"
+    det:  "Humpback Whale Identification · Quick, Draw! Doodle Recognition"
+    where: "Kaggle"
+  - date: "Aug 2023"
+    tag:  "Master"
+    body: "Kaggle Competitions Master"
+    det:  "Highest rank: 54{sup:th}"
+    where: "Kaggle"
+
+# ─── ACADEMIC HONORS ───────────────────────────────────────────────
+awards:
+  - { date: "2018–22", body: "Full-ride merit scholarships", det: "×2 full · ×3 quarter", where: "Kwangwoon U." }
+  - { date: "Oct 2022", body: "Dean’s List", det: "5th semester, B.S.", where: "Kwangwoon U." }
+  - { date: "Oct 2021", body: "Dean’s List", det: "3rd semester, B.S.", where: "Kwangwoon U." }
+
+# ─── EDUCATION ─────────────────────────────────────────────────────
+# `tag` shows below the date as a small secondary label.
+education:
+  - date: "2024 —"
+    tag:  "now"
+    body: "Ph.D. in Computer Science & Engineering"
+    det:  "Advisor: Prof. Jaewoo Kang · DMIS Lab"
+    where: "Korea University"
+  - date: "2018 —"
+    tag:  "2024"
+    body: "B.S. in Information Convergence"
+    det:  "GPA 4.17/4.5 · Major 4.43/4.5"
+    where: "Kwangwoon U."
+
+# ─── OPEN SOURCE / PROJECTS ────────────────────────────────────────
+# `body` is the project name (markdown link supported); `det` is the
+# inline italic description; `where` is the right-aligned star/tag.
+projects:
+  - date: "Mar 2024"
+    tag:  "JAX/Flax"
+    body: "[deit3-jax](https://github.com/affjljoo3581/deit3-jax)"
+    det:  "DeiT & DeiT-III on ImageNet-1k/21k, trained on TPU v4-64 (TRC)."
+    repo: "affjljoo3581/deit3-jax"     # auto-fetches ★ count from GitHub
+  - date: "Jun 2023"
+    tag:  "JAX/Flax"
+    body: "[polyglot & starcoder-jax](https://github.com/affjljoo3581/polyglot-jax-inference)"
+    det:  "Tensor-parallel inference for 30B-class LMs on a TPU-v3-8."
+    repo: "affjljoo3581/polyglot-jax-inference"
+  - date: "Sep 2020"
+    tag:  "PyTorch"
+    body: "[Korean GPT-2](https://github.com/affjljoo3581/GPT2)"
+    det:  "300M params trained on 30 GB / 5 B tokens of Korean corpus, 2× V100 for 24 days."
+    repo: "affjljoo3581/GPT2"
+
+# ─── COLOPHON ──────────────────────────────────────────────────────
+colophon: "Set in Newsreader & IBM Plex Mono · Hand-tended in Seoul"
+</script>
+<!--   ▲▲▲  END OF EDITABLE CONTENT  ▲▲▲   -->
+
+<main class="page skeleton" id="app"><!-- rendered by render.js --></main>
+
+<!-- libraries (CDN, both static & cacheable) -->
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+<!-- inline renderer — reads the <script id="site-data"> block above -->
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   render.js — fetches data.yaml and renders the site.
+
+   Pipeline:
+     1. fetch data.yaml
+     2. parse with js-yaml
+     3. transform each section into HTML strings
+     4. inject into <main id="app">
+
+   The renderer is intentionally small and dependency-light:
+     • js-yaml  → YAML parsing
+     • marked   → inline markdown (used only for short strings, with
+                  paragraph wrappers stripped)
+
+   Custom inline tokens (used inside any string field):
+     {me:Name}    → underlined "this is me" highlight
+     {eq}         → equal-contribution asterisk
+     {sup:th}     → superscript suffix
+     ", ..."      → rendered as ", …,"  (author elision shorthand)
+   ════════════════════════════════════════════════════════════════════ */
+
+(function () {
+  "use strict";
+
+  // ─── tiny helpers ─────────────────────────────────────────────────
+  const esc = (s) =>
+    String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  // marked, but for inline strings only (no <p> wrapper)
+  const md = (s) => {
+    if (s == null) return "";
+    const out = marked.parseInline(String(s), { mangle: false, headerIds: false });
+    return out;
+  };
+
+  // process custom tokens AFTER markdown — operating on the rendered
+  // HTML keeps tokens visible when authors review the YAML.
+  const tokens = (html) =>
+    String(html ?? "")
+      // {me:Some Name}  → highlighted self mention
+      .replace(/\{me:([^}]+)\}/g, '<span class="me">$1</span>')
+      // {eq}            → equal-contribution asterisk
+      .replace(/\{eq\}/g, '<span class="eq" style="color:var(--accent)">*</span>')
+      // {dagger}            → equal-contribution asterisk
+      .replace(/\{dag\}/g, '<span class="dag">†</span>')
+      // {sup:th}        → superscript suffix
+      .replace(/\{sup:([^}]+)\}/g, '<sup>$1</sup>')
+      // author elision  →  ", ...," (or ", ...") becomes ", …,"
+      // we consume any trailing comma so the YAML can read naturally
+      // either as ", ..., NextAuthor" or ", ... NextAuthor".
+      .replace(/,\s*\.\.\.\s*,?/g, ", &hellip;,")
+      // every <a> emitted from markdown gets external-link attrs
+      // (only if it doesn't already have them and isn't a fragment / mailto)
+      .replace(/<a\s+href="([^"]+)"(?![^>]*\btarget=)/g, (m, href) => {
+        if (href.startsWith("#") || href.startsWith("mailto:")) return m;
+        return `<a href="${href}" target="_blank" rel="noopener"`;
+      });
+
+  // full pipeline used for short text fields
+  const fmt = (s) => tokens(md(s));
+
+  // build the trailing <span class="links">…</span> shared by row + pull
+  const linksHTML = (links) => {
+    if (!links) return "";
+    const order = ["paper", "code", "slides", "bib"];
+    const parts = [];
+    for (const k of order) {
+      if (links[k]) {
+        parts.push(`<a href="${esc(links[k])}" target="_blank" rel="noopener">${k}</a>`);
+      }
+    }
+    // any extra keys not in `order` (forward-compat)
+    for (const k of Object.keys(links)) {
+      if (!order.includes(k) && links[k]) {
+        parts.push(`<a href="${esc(links[k])}" target="_blank" rel="noopener">${esc(k)}</a>`);
+      }
+    }
+    return parts.join("");
+  };
+
+  // ─── section renderers ────────────────────────────────────────────
+
+  function renderMasthead(m) {
+    const sub = m.name_subscript
+      ? ` <span class="han">${esc(m.name_subscript)}</span>`
+      : "";
+    return `
+      <header class="masthead">
+        <div class="edition">
+          <span class="l">${esc(m.edition_left || "")}</span>
+          <span class="c">${esc(m.edition_center || "")}</span>
+          <span class="r">${esc(m.edition_right || "")}</span>
+        </div>
+        <h1 class="name">${esc(m.name || "").replace(/ /g, "&nbsp;")}${sub}</h1>
+        <p class="strap">${esc(m.strap || "")}</p>
+      </header>
+    `;
+  }
+
+  function renderLede(lede) {
+    if (!lede) return "";
+    const paras = (lede.paragraphs || [])
+      .map((p) => `<p>${tokens(md(p))}</p>`)
+      .join("");
+    const pills = (lede.interests || [])
+      .map(
+        (i) =>
+          `<span class="pill"><span class="glyph">◇</span>${esc(i)}</span>`,
+      )
+      .join("");
+    return `
+      <div class="lede">
+        ${paras}
+        ${pills ? `<div class="ints" aria-label="research interests">${pills}</div>` : ""}
+      </div>
+    `;
+  }
+
+  function renderStats(stats) {
+    if (!stats || !stats.length) return "";
+    const items = stats
+      .map(
+        (s) => `<span class="s"><b>${tokens(esc(s.value))}</b>${esc(s.label)}</span>`,
+      )
+      .join('<span class="div">·</span>');
+    return `<div class="stat-line" aria-label="at a glance">${items}</div>`;
+  }
+
+  function renderContact(c) {
+    if (!c) return "";
+    // each link + its trailing separator forms a non-breaking unit;
+    // a regular space between units gives the browser wrap points.
+    const items = [];
+    if (c.email) {
+      items.push(`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`);
+    }
+    for (const link of c.links || []) {
+      items.push(
+        `<a href="${esc(link.url)}" target="_blank" rel="noopener">${esc(link.label)}</a>`,
+      );
+    }
+    // wrap each item (except the last) with its following separator so
+    // links don't get orphaned from their separator on wrap.
+    const html = items
+      .map((html, i) =>
+        i < items.length - 1
+          ? `<span class="ci">${html}<span class="sep">/</span></span>`
+          : `<span class="ci">${html}</span>`,
+      )
+      .join(" ");
+    return `<nav class="contact" aria-label="contact">${html}</nav>`;
+  }
+
+  // section header with glyph
+  const head = (glyph, title) =>
+    `<div class="sec-head"><h2><span class="glyph">${glyph}</span>${esc(title)}</h2></div>`;
+
+  function renderNews(news) {
+    if (!news || !news.length) return "";
+    const rows = news
+      .map(
+        (n) => `
+        <div class="row simple">
+          <span class="meta">${esc(n.date)}</span>
+          <span class="body">${fmt(n.body)}</span>
+          <span class="where">${esc(n.where || "")}</span>
+        </div>`,
+      )
+      .join("");
+    return `<section id="news">${head("¶", "Dispatches")}${rows}</section>`;
+  }
+
+  function renderPullQuote(pub) {
+    const titleLink = pub.links && pub.links.paper ? pub.links.paper : "#";
+    const blurb = pub.featured_blurb ? ` ${tokens(md(pub.featured_blurb))}` : "";
+    const kicker = pub.featured_kicker || `${pub.venue} · Selected work`;
+    return `
+      <article class="pull">
+        <p class="kicker">⟶ ${esc(kicker)}</p>
+        <blockquote class="quote"><a href="${esc(titleLink)}" target="_blank" rel="noopener">${esc(pub.title)}.</a>${blurb}</blockquote>
+        <div class="attr">
+          ${tokens(esc(pub.authors).replace(/&amp;/g, "&"))}
+          <span class="links">${linksHTML(pub.links)}</span>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderPubRow(pub) {
+    const titleLink = pub.links && pub.links.paper ? pub.links.paper : "#";
+    return `
+      <div class="row">
+        <div class="meta">${esc(pub.year)}<span class="v">${esc(pub.venue)}</span></div>
+        <div class="body">
+          <p class="title"><a href="${esc(titleLink)}" target="_blank" rel="noopener">${esc(pub.title)}</a></p>
+          <p class="authors">${tokens(esc(pub.authors).replace(/&amp;/g, "&"))}</p>
+          <p class="links">${linksHTML(pub.links)}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPublications(pubs) {
+    if (!pubs || !pubs.length) return "";
+    // const featured = pubs.find((p) => p.featured);
+    const featured = pubs.filter((p) => p.featured).map(renderPullQuote).join("");
+    // featured publication is already shown as a pull-quote at the top,
+    // so omit it from the main list to avoid duplication.
+    const rows = pubs.filter((p) => !p.featured).map(renderPubRow).join("");
+    return `
+      <section id="publications">
+        ${head("§", "Publications")}
+        ${featured}
+        ${rows}
+      </section>
+    `;
+    // ${featured ? renderPullQuote(featured) : ""}
+  }
+
+  function renderService(service, note) {
+    if (!service || !service.length) return "";
+    const rows = service
+      .map(
+        (s) => `
+        <div class="svc">
+          <span class="yr">${esc(s.year)}</span>
+          <div class="vens">${(s.venues || [])
+            .map((v) => `<span class="v">${tokens(esc(v))}</span>`)
+            .join("")}</div>
+        </div>`,
+      )
+      .join("");
+    const noteParas = !note ? [] : (Array.isArray(note) ? note : [note]);
+    const noteHTML = noteParas.length
+      ? `<div style="font-family:var(--mono); font-size:11.5px; color:var(--ink-mute); letter-spacing:.04em; margin-top:18px; line-height:1.7">${
+          noteParas.map((p) => `<p style="margin:0 0 .3em">${fmt(p)}</p>`).join("")
+        }</div>`
+      : "";
+    return `<section id="service">${head("※", "Academic Service")}${rows}${noteHTML}</section>`;
+  }
+
+  // generic “simple row” renderer used by competitions/awards/education/projects
+  // shape: { date, tag?, body, det?, where? }
+  function renderSimpleRow(item, opts) {
+    const cls = opts && opts.detBlock ? "row simple block" : "row simple";
+    const tag = item.tag
+      ? `<span class="v">${tokens(esc(item.tag))}</span>`
+      : "";
+    const det = item.det
+      ? ` <span class="det">${fmt(item.det)}</span>`
+      : "";
+    // If `repo` is set, render a placeholder that gets filled in
+    // asynchronously by hydrateGitHubStars(). Falls back to `where`.
+    const right = item.repo
+      ? `<span class="gh-stars" data-repo="${esc(item.repo)}" title="GitHub stars for ${esc(item.repo)}">★ …</span>`
+      : tokens(esc(item.where || ""));
+    return `
+      <div class="${cls}">
+        <span class="meta">${esc(item.date)}${tag}</span>
+        <span class="body"><strong>${fmt(item.body)}</strong>${det}</span>
+        <span class="where">${right}</span>
+      </div>
+    `;
+  }
+
+  function renderSimpleSection(id, glyph, title, items, opts) {
+    if (!items || !items.length) return "";
+    return `<section id="${id}">${head(glyph, title)}${items.map(it => renderSimpleRow(it, opts)).join("")}</section>`;
+  }
+
+  function renderFooter(meta) {
+    const year = new Date().getFullYear();
+    const lastRev = meta && meta.last_revised
+      ? `Last revised ${esc(meta.last_revised)} &nbsp;·&nbsp; `
+      : "";
+    return `
+      <footer>
+        <span><span class="glyph">❦</span>&nbsp;&nbsp;© ${year} ${esc((meta && meta.name) || "")}</span>
+        <span>${lastRev}<a href="#" id="theme-toggle">theme</a></span>
+      </footer>
+    `;
+  }
+
+  function renderAll(d) {
+    return [
+      renderMasthead(d.masthead || {}),
+      renderLede(d.lede),
+      renderStats(d.stats),
+      renderContact(d.contact),
+      renderNews(d.news),
+      renderPublications(d.publications),
+      renderService(d.service, d.service_note),
+      renderSimpleSection("competitions", "▣", "Kaggle & Competitions", d.competitions),
+      renderSimpleSection("awards",       "★", "Academic Honors",       d.awards),
+      renderSimpleSection("education",    "∎", "Education",             d.education,    { detBlock: true }),
+      renderSimpleSection("projects",     "◐", "Open Source",           d.projects),
+      d.colophon ? `<p class="colophon">${fmt(d.colophon)}</p>` : "",
+      renderFooter({
+        name: (d.masthead && d.masthead.name) || "",
+        last_revised: d.meta && d.meta.last_revised,
+      }),
+    ].join("\n");
+  }
+
+  // ─── GitHub stars (async hydration) ───────────────────────────────
+  // After the page renders, find every <span class="gh-stars" data-repo="…">
+  // and replace its text with the live star count from GitHub's public
+  // API. Results are cached in localStorage for 24h to be friendly to
+  // the unauthenticated rate limit (60 req / IP / hour).
+  async function hydrateGitHubStars() {
+    const els = document.querySelectorAll(".gh-stars[data-repo]");
+    if (!els.length) return;
+    const TTL = 24 * 60 * 60 * 1000;            // 24h cache
+    const cacheKey = (repo) => `gh-stars:${repo}`;
+
+    const fetchStars = async (repo) => {
+      // try cache first
+      try {
+        const raw = localStorage.getItem(cacheKey(repo));
+        if (raw) {
+          const { stars, ts } = JSON.parse(raw);
+          if (Date.now() - ts < TTL && typeof stars === "number") return stars;
+        }
+      } catch (_) {}
+      // fall through to network
+      const res = await fetch(`https://api.github.com/repos/${repo}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const stars = data.stargazers_count;
+      try {
+        localStorage.setItem(cacheKey(repo), JSON.stringify({ stars, ts: Date.now() }));
+      } catch (_) {}
+      return stars;
+    };
+
+    // dedupe: same repo listed twice should only fetch once
+    const byRepo = new Map();
+    els.forEach((el) => {
+      const repo = el.dataset.repo;
+      if (!byRepo.has(repo)) byRepo.set(repo, []);
+      byRepo.get(repo).push(el);
+    });
+
+    await Promise.all(
+      [...byRepo.entries()].map(async ([repo, targets]) => {
+        try {
+          const stars = await fetchStars(repo);
+          const text = `${stars.toLocaleString()} ★`;
+          targets.forEach((el) => {
+            el.textContent = text;
+            el.classList.add("loaded");
+          });
+        } catch (err) {
+          // on failure, hide the placeholder rather than show "★ …" forever
+          targets.forEach((el) => { el.textContent = ""; });
+        }
+      }),
+    );
+  }
+
+  // ─── theme toggle (re-bound after each render) ────────────────────
+  function bindThemeToggle() {
+    const btn = document.getElementById("theme-toggle");
+    if (!btn) return;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const order = ["warm", "paper", "dusk"];
+      const cur = document.documentElement.dataset.theme || "warm";
+      const next = order[(order.indexOf(cur) + 1) % order.length];
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem("theme", next);
+      } catch (_) {}
+    });
+    // restore previous selection
+    try {
+      const saved = localStorage.getItem("theme");
+      if (saved) document.documentElement.dataset.theme = saved;
+    } catch (_) {}
+  }
+
+  // ─── error display ────────────────────────────────────────────────
+  function showError(title, detail) {
+    const app = document.getElementById("app");
+    app.classList.add("ready");
+    app.innerHTML = `
+      <div id="render-error" role="alert">
+        <h3>${esc(title)}</h3>
+        <div>${detail}</div>
+      </div>
+    `;
+  }
+
+  // ─── entry point ──────────────────────────────────────────────────
+  function main() {
+    const dataTag = document.getElementById("site-data");
+    if (!dataTag) {
+      showError(
+        "Missing data block",
+        `<p>Could not find <code>&lt;script id=\"site-data\"&gt;</code> in this page.</p>`,
+      );
+      return;
+    }
+    const text = dataTag.textContent;
+
+    let data;
+    try {
+      data = jsyaml.load(text);
+    } catch (err) {
+      showError(
+        "data.yaml has a syntax error",
+        `<p><code>${esc(err.message || String(err))}</code></p>`,
+      );
+      return;
+    }
+
+    // tab title + meta description
+    if (data.meta) {
+      if (data.meta.title) document.title = data.meta.title;
+      const descTag = document.querySelector('meta[name="description"]');
+      if (descTag && data.meta.description) {
+        descTag.setAttribute("content", data.meta.description);
+      }
+    }
+
+    const app = document.getElementById("app");
+    app.innerHTML = renderAll(data);
+    app.classList.add("ready");
+
+    bindThemeToggle();
+    // fire-and-forget: don't block page interactivity on the network call
+    hydrateGitHubStars();
+  }
+
+  document.addEventListener("DOMContentLoaded", main);
+})();
+
+</script>
+
+</body>
+</html>
