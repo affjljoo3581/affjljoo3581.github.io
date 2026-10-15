@@ -519,7 +519,7 @@ meta:
   description: >-
     Jungwoo Park — PhD student at Korea University, working on language
     models, pre-training, and mechanistic interpretability.
-  last_revised: May 2026          # shown in the footer
+  last_revised: Oct 2026          # shown in the footer
 
 # ─── MASTHEAD (top banner) ─────────────────────────────────────────
 masthead:
@@ -552,8 +552,8 @@ lede:
 # ─── STAT LINE (the inline numeric strip) ──────────────────────────
 # Use {sup} for superscript suffixes, e.g. "54{sup:th}".
 stats:
-  - { value: "11", label: "papers" }
-  - { value: "4",  label: "first-author" }
+  - { value: "17", label: "papers" }
+  - { value: "8",  label: "first-author" }
   - { value: "2",  label: "solo Kaggle golds" }
   - { value: "54{sup:th}", label: "Kaggle peak" }
 
@@ -574,6 +574,12 @@ contact:
 # ─── NEWS / DISPATCHES ─────────────────────────────────────────────
 # `body` accepts markdown. `where` is the small right-aligned tag.
 news:
+  - date: "Oct 2026"
+    body: "Released **UltraBERT** and **UltraBERT-Embed** models on *Hugging Face*."
+    where: "Hugging Face"
+  - date: "Aug 2026"
+    body: "**Meerkat2** accepted to *EMNLP 2026*."
+    where: "Budapest, HU"
   - date: "Jan 2026"
     body: "**ASGuard** accepted to *ICLR 2026*."
     where: "Rio de Janeiro, BR"
@@ -605,6 +611,35 @@ news:
 # `links` keys: paper / code / slides / bib (any subset, in order).
 publications:
 
+  - year: 2026
+    venue: "ICLR 2027 (submitted)"
+    title: "UltraBERT: Beyond the Limit of BERT Pre-Training"
+    authors: "{me:Jungwoo Park}, Taewhoo Lee, Jaewoo Kang"
+    featured: true
+    featured_blurb: >-
+      Revisiting BERT-style encoder pre-training at scale and releasing
+      150M and 380M English encoders with 32K context, built for both
+      classification and retrieval.
+    featured_kicker: "Submitted to ICLR 2027 · Selected work"
+    links:
+      paper:       "https://arxiv.org/abs/2610.15028"
+      huggingface: "https://huggingface.co/collections/dmis-lab/ultrabert"
+      blog:        "https://huggingface.co/blog/dmis-lab/ultrabert"
+
+  - year: 2026
+    venue: "NAACL 2027 (submitted)"
+    title: "UltraBERT-Embed: A Compact Long-Context Encoder for Text and Code Embeddings"
+    authors: "{me:Jungwoo Park}, Jaewoo Kang"
+    featured: true
+    featured_blurb: >-
+      A 150M embedding model on top of UltraBERT with 32K context for
+      text and code, the best among dense models under 200M parameters.
+    featured_kicker: "Submitted to NAACL 2027 · Selected work"
+    links:
+      code:        "https://github.com/dmis-lab/ultrabert-embed-training"
+      huggingface: "https://huggingface.co/dmis-lab/UltraBERT-Embed-150M"
+      blog:        "https://huggingface.co/blog/dmis-lab/ultrabert"
+
   - year: 2025
     venue: ICLR
     title: "Monet: Mixture of Monosemantic Experts for Transformers"
@@ -633,6 +668,39 @@ publications:
       paper: "https://aclanthology.org/2025.acl-long.618/"
       code:  "https://github.com/dmis-lab/Outlier-Safe-Pre-Training"
       huggingface: "https://huggingface.co/collections/dmis-lab/outlier-safe-pre-training-osp"
+
+  - year: 2026
+    venue: EMNLP
+    title: "Meerkat2: Bridging Global Reasoning and Local Knowledge for Efficient Medical AI"
+    authors: "{me:Jungwoo Park}, Hyeongsoon Hwang, Sanghoon Lee, Jaewoo Kang"
+
+  - year: 2026
+    venue: MICCAI
+    title: "Marginal Constrained Morphological Prototype Learning for Patch Search in Whole Slide Images"
+    authors: "Sihyeon Park, {me:Jungwoo Park}, Hyunjae Kim, Jaewoo Kang, Bumsoo Kim"
+    links:
+      paper: "https://papers.miccai.org/miccai-2026/paper/6616_paper.pdf"
+      code:  "https://github.com/dmis-lab/MMPL"
+
+  - year: 2026
+    venue: "npj Dig. Med."
+    title: "LEME: Open Large Language Models for Ophthalmology with Advanced Reasoning and Clinical Validation"
+    authors: "Hyunjae Kim{eq}, Xuguang Ai{eq}, Sahana Srinivasan{eq}, ..., {me:Jungwoo Park}, ..., Qingyu Chen"
+    links: { paper: "https://www.nature.com/articles/s41746-026-03104-4" }
+
+  - year: 2026
+    venue: arXiv
+    title: "Do All Visual Tokens Matter Equally? Object-Evidence Preserving Token Merging for Vision-Language Retrieval"
+    authors: "Suhyeong Park, Junha Jung, {me:Jungwoo Park}, Jaewoo Kang"
+    links:
+      paper:       "https://arxiv.org/abs/2607.04605"
+      code:        "https://github.com/dmis-lab/samer"
+      huggingface: "https://huggingface.co/collections/dmis-lab/samer"
+
+  - year: 2026
+    venue: "Under review"
+    title: "Self-Assessment Reinforcement Learning for Search-State Awareness in Retrieval-Augmented Large Language Models"
+    authors: "Taewhoo Lee, Minju Song, {me:Jungwoo Park}, Chanwoong Yoon, Junha Jung, ..., Jaewoo Kang"
 
   - year: 2026
     venue: ICLR
@@ -671,15 +739,9 @@ publications:
     links: { paper: "https://www.nature.com/articles/s41746-025-01653-8", "huggingface": "https://huggingface.co/collections/dmis-lab/meerkat" }
 
   - year: 2025
-    venue: arXiv
-    title: "LEME: Open Large Language Models for Ophthalmology with Advanced Reasoning and Clinical Validation"
-    authors: "Hyunjae Kim, ..., {me:Jungwoo Park}, ..., Qingyu Chen"
-    links: { paper: "https://arxiv.org/abs/2410.03740" }
-
-  - year: 2025
     venue: CLEF
     title: "Prompting Matters: Snippet-Aware Strategies for Biomedical QA with LLMs in BioASQ 13b"
-    authors: "Hajung Kim, Hoonick Lee, Yewon Cho, {me:Jungwoo Park}, ..., Jaewoo Kang"
+    authors: "Hajung Kim{eq}, Hoonick Lee{eq}, Yewon Cho{eq}, {me:Jungwoo Park}{eq}, ..., Jaewoo Kang"
     links: { paper: "https://ceur-ws.org/Vol-4038/paper_25.pdf" }
 
   - year: 2024
@@ -690,7 +752,7 @@ publications:
 
 # ─── ACADEMIC SERVICE ──────────────────────────────────────────────
 service:
-  - { year: 2026, venues: ["NeurIPS", "ARR Jan{dag}"] }
+  - { year: 2026, venues: ["NeurIPS", "ARR May", "ARR Jan{dag}"] }
   - { year: 2025, venues: ["ICLR", "ICCV{dag}", "ARR Jan{dag}"] }
 service_note:
   - "Reviewer / program committee for the venues above."
